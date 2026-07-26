@@ -33,27 +33,22 @@ export class ExtraNumberCalculator {
         let gapWeight = 0;
         
         if (history.length > 0) {
-            // Analyze patterns
             const hot = this.patternAnalyzer.getHotNumbers(5);
             const cold = this.patternAnalyzer.getColdNumbers(5);
-            const due = this.patternAnalyzer.getDueNumbers(5);
-            
-            hotWeight = hot.reduce((sum, n) => sum + n, 0) / hot.length;
-            coldWeight = cold.reduce((sum, n) => sum + n, 0) / cold.length;
-            
-            // Gap analysis
+
+            hotWeight = hot.length > 0 ? hot.reduce((sum, n) => sum + n, 0) / hot.length : 0;
+            coldWeight = cold.length > 0 ? cold.reduce((sum, n) => sum + n, 0) / cold.length : 0;
+
             const gaps = this.patternAnalyzer.gaps;
             const gapValues = Object.values(gaps)
                 .filter(g => g.length > 0)
                 .map(g => g[g.length - 1]);
-            const avgGap = gapValues.length > 0 
-                ? gapValues.reduce((a, b) => a + b, 0) / gapValues.length 
+            gapWeight = gapValues.length > 0
+                ? gapValues.reduce((a, b) => a + b, 0) / gapValues.length
                 : 0;
-            
-            gapWeight = avgGap || 0;
-            
-            // Weighted combination
+
             statisticalWeight = (hotWeight * 0.3 + coldWeight * 0.3 + gapWeight * 0.4);
+            if (!isFinite(statisticalWeight)) statisticalWeight = 0;
         }
         
         // 5. Quantum influence
@@ -124,7 +119,7 @@ export class ExtraNumberCalculator {
         flavor += `${retroText || 'No retrogrades'}, `;
         flavor += `Statistics (${Math.round(statisticalWeight)}), `;
         flavor += `and Quantum (${Math.round(quantumInfluence)}) `;
-        flavor += `converge to ${number}!`;
+        flavor += `converge to ${number}! `;
         
         // Add special flavor for certain numbers
         if (number === 7 || number === 13 || number === 21 || number === 42) {
