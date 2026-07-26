@@ -13,6 +13,7 @@ import { TrialsEngine } from './trials.js';
 import { ExtraNumberCalculator } from './extraNumber.js';
 import { WeatherService } from './weather.js';
 import { UIManager } from './ui.js';
+import { SheetsDB } from './sheets.js';
 
 class NorseLotteryApp {
     constructor() {
@@ -50,7 +51,7 @@ class NorseLotteryApp {
         this.bindEvents();
         
         // Initialize app
-        this.initialize();
+        this.initialize().catch(err => console.warn('Init error:', err));
     }
 
     /**
@@ -123,8 +124,15 @@ class NorseLotteryApp {
     /**
      * Initialize app - check for existing user
      */
-    initialize() {
+    async initialize() {
         this.csvManager.loadFromStorage();
+
+        // Load history from Google Sheets
+        const sheetsHistory = await SheetsDB.load();
+        if (sheetsHistory.length > 0) {
+            this.csvManager.history = sheetsHistory;
+            this.csvManager.saveToStorage();
+        }
         
         if (this.userManager.isRegistered()) {
             const profile = this.userManager.getProfile();
@@ -284,8 +292,17 @@ class NorseLotteryApp {
                 this.ui.showToast(`✅ New sequence saved! Crown Jewel: ${result.extra}`, 'success');
             }
             
-            // Auto-save to CSV
+            // Auto-save to CSV and Google Sheets
             this.autoExportCSV();
+            SheetsDB.save({
+                numbers: result.numbers.join(','),
+                extra: result.extra,
+                timestamp: result.timestamp,
+                zodiac: result.zodiac,
+                prophecy: result.prophecy,
+                weather: result.weather || 'Unknown',
+                moonPhase: result.moonPhase || 'Unknown'
+            });
             
             // Show results tab
             if (window.showResultsTab) {
