@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>⚡ Norse Cosmic Lottery ⚡</title>
-    <link rel="manifest" href="manifest.json">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+    
     <meta name="theme-color" content="#0a0a1a">
     <meta name="description" content="Summon your lottery numbers with Norse mythology, quantum physics, and cosmic alignments!">
-    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
     <!-- Background cosmic particles -->
@@ -34,11 +43,44 @@
             </div>
         </header>
 
-        <!-- Main Content -->
+        <!-- ============ NAVIGATION ============ -->
+        <nav class="main-nav" id="mainNav">
+            <button class="nav-btn active" data-tab="input" id="navInput">
+                <span class="nav-icon">🌀</span>
+                <span class="nav-label">Ritual</span>
+            </button>
+            <button class="nav-btn" data-tab="stats" id="navStats">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Analysis</span>
+            </button>
+            <button class="nav-btn" data-tab="results" id="navResults">
+                <span class="nav-icon">🌌</span>
+                <span class="nav-label">Results</span>
+            </button>
+            <button class="nav-btn" data-tab="profile" id="navProfile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profile</span>
+            </button>
+        </nav>
+
+        <!-- ============ MAIN CONTENT ============ -->
         <main id="mainContent">
-            <!-- SECTION 1: INPUT -->
-            <section id="inputSection" class="section active">
+            
+            <!-- ===== TAB 1: INPUT / RITUAL ===== -->
+            <section id="inputSection" class="tab-content active">
                 <div class="input-container">
+                    <!-- User Profile Summary -->
+                    <div id="userSummary" class="user-summary" style="display:none;">
+                        <div class="summary-avatar">🌟</div>
+                        <div class="summary-info">
+                            <div class="summary-name" id="summaryName">User</div>
+                            <div class="summary-zodiac" id="summaryZodiac">♐ Sagittarius</div>
+                        </div>
+                        <div class="summary-rituals">
+                            🔮 <span id="summaryRituals">0</span>
+                        </div>
+                    </div>
+
                     <!-- Birthdate Input -->
                     <div class="input-group">
                         <label for="birthdate">📅 Date of Birth</label>
@@ -87,10 +129,12 @@
                 </div>
             </section>
 
-            <!-- SECTION 2: STATS DASHBOARD -->
-            <section id="statsSection" class="section">
+            <!-- ===== TAB 2: STATS / ANALYSIS ===== -->
+            <section id="statsSection" class="tab-content">
                 <div class="stats-container">
                     <h2>📊 Pattern Analysis</h2>
+                    
+                    <!-- Stats Grid -->
                     <div class="stats-grid" id="statsGrid">
                         <div class="stat-card">
                             <span class="stat-icon">📈</span>
@@ -127,13 +171,27 @@
                     <!-- Frequency Chart -->
                     <div class="frequency-chart-container">
                         <h3>📊 Number Frequency</h3>
-                        <div id="frequencyChart" class="frequency-chart"></div>
+                        <div id="frequencyChart" class="frequency-chart">
+                            <p style="color:var(--text-muted);font-size:0.9rem;width:100%;text-align:center;">
+                                No data yet. Perform rituals to build the chart!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- History Table -->
+                    <div class="history-container">
+                        <h3>📜 History</h3>
+                        <div id="historyTable" class="history-table">
+                            <p style="color:var(--text-muted);font-size:0.9rem;text-align:center;">
+                                No history yet. Run a ritual!
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- SECTION 3: RESULTS -->
-            <section id="resultsSection" class="section">
+            <!-- ===== TAB 3: RESULTS ===== -->
+            <section id="resultsSection" class="tab-content">
                 <div class="results-container">
                     <h2>🌌 THE NUMBERS HAVE SPOKEN</h2>
                     
@@ -171,8 +229,8 @@
                         </div>
                     </div>
 
-                    <!-- Extra Number -->
-                    <div class="extra-number-container">
+                    <!-- ===== CROWN JEWEL (EXTRA NUMBER) ===== -->
+                    <div class="extra-number-container" id="extraContainer">
                         <div class="extra-label">⭐ CROWN JEWEL ⭐</div>
                         <div class="extra-circle" id="extraCircle">
                             <span class="extra-value" id="extraValue">?</span>
@@ -199,6 +257,22 @@
                     </div>
                 </div>
             </section>
+
+            <!-- ===== TAB 4: PROFILE ===== -->
+            <section id="profileSection" class="tab-content">
+                <div class="profile-container">
+                    <h2>👤 Your Cosmic Profile</h2>
+                    
+                    <div id="profileContent" class="profile-content">
+                        <div class="profile-empty">
+                            <span class="profile-empty-icon">🌟</span>
+                            <p>Register to see your cosmic profile!</p>
+                            <button id="profileRegisterBtn" class="action-button primary">Register Now</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
 
         <!-- Footer -->
@@ -211,7 +285,7 @@
     <!-- Hidden file input for CSV export -->
     <a id="downloadLink" style="display:none;"></a>
 
-        <!-- ✅ FIXED: This line needs type="module" -->
+    <!-- JavaScript -->
     <script type="module" src="./js/app.js"></script>
 </body>
 </html>
