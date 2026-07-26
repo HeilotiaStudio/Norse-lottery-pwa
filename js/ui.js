@@ -1,6 +1,6 @@
 /**
  * UI Manager - Handles all DOM updates and animations
- * Updated with user management UI
+ * Updated with CSV export, history table, and tab navigation
  */
 
 export class UIManager {
@@ -8,7 +8,8 @@ export class UIManager {
         this.sections = {
             input: document.getElementById('inputSection'),
             stats: document.getElementById('statsSection'),
-            results: document.getElementById('resultsSection')
+            results: document.getElementById('resultsSection'),
+            profile: document.getElementById('profileSection')
         };
         
         this.toastTimeout = null;
@@ -25,7 +26,6 @@ export class UIManager {
      * Show user registration prompt
      */
     showUserRegistration() {
-        // Check if modal already exists
         if (document.getElementById('userRegistrationModal')) return;
 
         const modal = document.createElement('div');
@@ -62,12 +62,10 @@ export class UIManager {
 
         document.body.appendChild(modal);
 
-        // Focus on birthdate
         setTimeout(() => {
             document.getElementById('userBirthdate').focus();
         }, 300);
 
-        // Handle registration
         document.getElementById('registerBtn').addEventListener('click', () => {
             const name = document.getElementById('userName').value.trim() || null;
             const birthdate = document.getElementById('userBirthdate').value;
@@ -83,14 +81,12 @@ export class UIManager {
             this.closeModal('userRegistrationModal');
         });
 
-        // Enter key on birthdate
         document.getElementById('userBirthdate').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 document.getElementById('registerBtn').click();
             }
         });
 
-        // Click outside to close (but only if they haven't started)
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 if (!document.getElementById('userBirthdate').value) {
@@ -151,7 +147,6 @@ export class UIManager {
         profileElement.innerHTML = profileHTML;
         inputContainer.prepend(profileElement);
 
-        // Logout handler
         document.getElementById('logoutBtn').addEventListener('click', () => {
             if (confirm('Are you sure you want to logout? Your history will be saved.')) {
                 if (this.onLogout) {
@@ -195,7 +190,6 @@ export class UIManager {
         if (show) {
             loading.style.display = 'block';
             btn.style.display = 'none';
-            this.showSection('input');
         } else {
             loading.style.display = 'none';
             btn.style.display = 'block';
@@ -203,37 +197,58 @@ export class UIManager {
     }
 
     /**
-     * Show a specific section
-     * @param {string} section - Section name ('input', 'stats', 'results')
+     * Show a specific section using tabs
+     * @param {string} section - Section name ('input', 'stats', 'results', 'profile')
      */
     showSection(section) {
-        Object.keys(this.sections).forEach(key => {
-            if (this.sections[key]) {
-                this.sections[key].classList.toggle('active', key === section);
-            }
-        });
+        if (window.switchTab) {
+            window.switchTab(section);
+        } else {
+            // Fallback for backwards compatibility
+            Object.keys(this.sections).forEach(key => {
+                if (this.sections[key]) {
+                    this.sections[key].classList.toggle('active', key === section);
+                }
+            });
+        }
     }
 
     /**
      * Show input section
      */
     showInputSection() {
-        this.showSection('input');
+        if (window.switchTab) {
+            window.switchTab('input');
+        }
     }
 
     /**
      * Show stats section
      */
     showStatsSection() {
-        this.showSection('stats');
+        if (window.switchTab) {
+            window.switchTab('stats');
+        }
     }
 
     /**
      * Show results section
      */
     showResultsSection() {
-        this.showSection('results');
-        this.showSection('stats');
+        if (window.showResultsTab) {
+            window.showResultsTab();
+        } else {
+            this.showSection('results');
+        }
+    }
+
+    /**
+     * Show profile section
+     */
+    showProfileSection() {
+        if (window.switchTab) {
+            window.switchTab('profile');
+        }
     }
 
     /**
@@ -252,7 +267,6 @@ export class UIManager {
             circle.className = 'number-circle';
         });
 
-        // Reveal one by one with delay
         for (let i = 0; i < 5; i++) {
             await this.delay(600 + i * 300);
             
@@ -268,7 +282,6 @@ export class UIManager {
             }
         }
 
-        // Reveal extra number
         await this.delay(500);
         const extraCircle = document.getElementById('extraCircle');
         const extraValue = document.getElementById('extraValue');
@@ -280,13 +293,15 @@ export class UIManager {
             extraFlavor.textContent = result.extraFlavor;
         }
 
-        // Show prophecy
         await this.delay(400);
         const prophecyText = document.getElementById('prophecyText');
         if (prophecyText) {
             prophecyText.textContent = result.prophecy;
             prophecyText.parentElement.style.display = 'block';
         }
+
+        // Update history table after results
+        this.updateHistoryTable();
     }
 
     /**
@@ -308,8 +323,6 @@ export class UIManager {
         document.getElementById('prophecyText').textContent = 'The cosmos awaits...';
         
         this.hideDuplicateWarning();
-        this.sections.results.classList.remove('active');
-        this.sections.input.classList.add('active');
     }
 
     /**
@@ -370,6 +383,7 @@ export class UIManager {
         document.getElementById('frequentPair').textContent = insights.mostFrequentPair || '-';
 
         this.updateFrequencyChart();
+        this.updateHistoryTable();
     }
 
     /**
@@ -383,7 +397,7 @@ export class UIManager {
         const numbers = Object.keys(frequency).map(Number).sort((a, b) => a - b);
         
         if (numbers.length === 0) {
-            chart.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;">No data yet. Perform rituals to build the chart!</p>';
+            chart.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;width:100%;text-align:center;">No data yet. Perform rituals to build the chart!</p>';
             return;
         }
 
@@ -403,6 +417,95 @@ export class UIManager {
         });
 
         chart.innerHTML = html;
+    }
+
+    /**
+     * Update history table with all saved draws
+     */
+    updateHistoryTable() {
+        const container = document.getElementById('historyTable');
+        if (!container) return;
+
+        const history = window.app?.csvManager?.history || [];
+        
+        if (history.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-muted);font-size:0.9rem;text-align:center;">No history yet. Run a ritual!</p>';
+            return;
+        }
+
+        let html = '<table><thead><tr>';
+        html += '<th>#</th><th>Numbers</th><th>Extra</th><th>Date</th><th>Zodiac</th>';
+        html += '</tr></thead><tbody>';
+
+        const reversed = [...history].reverse();
+        reversed.forEach((entry, index) => {
+            const num = history.length - index;
+            const numbers = entry.numbers || '';
+            const extra = entry.extra || '';
+            const date = entry.timestamp ? new Date(entry.timestamp).toLocaleDateString() : '';
+            const zodiac = entry.zodiac || '';
+            
+            html += `<tr>
+                <td>${num}</td>
+                <td class="highlight-numbers">${numbers}</td>
+                <td style="color:var(--color-extra);font-weight:bold;">${extra}</td>
+                <td>${date}</td>
+                <td>${zodiac}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    /**
+     * Export history to CSV string
+     * @returns {string} CSV content
+     */
+    exportCSV() {
+        const history = window.app?.csvManager?.history || [];
+        
+        if (history.length === 0) {
+            this.showToast('⚠️ No history to export!', 'error');
+            return null;
+        }
+
+        const headers = ['numbers', 'extra', 'timestamp', 'zodiac', 'prophecy', 'weather', 'moonPhase'];
+        let csv = headers.join(',') + '\n';
+
+        history.forEach(entry => {
+            const row = headers.map(h => {
+                let value = entry[h] || '';
+                if (value.includes(',') || value.includes('"')) {
+                    value = `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            }).join(',');
+            csv += row + '\n';
+        });
+
+        return csv;
+    }
+
+    /**
+     * Download CSV file
+     * @param {string} csvContent - CSV content
+     * @param {string} filename - File name
+     */
+    downloadCSV(csvContent, filename = 'numbers.csv') {
+        if (!csvContent) return;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        this.showToast(`📥 ${filename} downloaded successfully!`, 'success');
     }
 
     /**

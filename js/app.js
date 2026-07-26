@@ -1,11 +1,12 @@
 /**
  * Norse Cosmic Lottery - Main Application
  * Orchestrates the entire cosmic ritual with user management
+ * Auto-saves to CSV and checks for duplicates
  */
 
 import { UserManager } from './userManager.js';
 import { CSVManager } from './csvManager.js';
-import { PatternAnalyzer } './patternAnalyzer.js';
+import { PatternAnalyzer } from './patternAnalyzer.js';
 import { QuantumModifier } from './quantumModifier.js';
 import { AstrologyEngine } from './astrology.js';
 import { TrialsEngine } from './trials.js';
@@ -64,42 +65,34 @@ class NorseLotteryApp {
             profile: document.getElementById('profileSection')
         };
 
-        // Hide results tab initially
         const resultsBtn = document.querySelector('.nav-btn[data-tab="results"]');
         if (resultsBtn) {
             resultsBtn.style.display = 'none';
         }
 
-        // Tab switching function
         const switchTab = (tabId) => {
-            // Update buttons
             navBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tabId);
             });
 
-            // Update sections
             Object.keys(sections).forEach(key => {
                 if (sections[key]) {
                     sections[key].classList.toggle('active', key === tabId);
                 }
             });
 
-            // Save current tab
             localStorage.setItem('currentTab', tabId);
         };
 
-        // Add click listeners
         navBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 switchTab(btn.dataset.tab);
             });
         });
 
-        // Restore last tab or default to input
         const lastTab = localStorage.getItem('currentTab') || 'input';
         switchTab(lastTab);
 
-        // Store switchTab globally so other methods can use it
         window.switchTab = switchTab;
         window.showResultsTab = () => {
             const btn = document.querySelector('.nav-btn[data-tab="results"]');
@@ -109,7 +102,6 @@ class NorseLotteryApp {
             }
         };
         
-        // Store sections globally for UI manager
         window.tabSections = sections;
     }
 
@@ -117,40 +109,30 @@ class NorseLotteryApp {
      * Initialize app - check for existing user
      */
     initialize() {
-        // Load saved data
         this.csvManager.loadFromStorage();
         
-        // Check if user exists
         if (this.userManager.isRegistered()) {
             const profile = this.userManager.getProfile();
             this.ui.showUserProfile(profile);
             this.ui.showUserWelcome(profile.name, profile.zodiac?.name || '');
             
-            // Auto-fill birthdate
             document.getElementById('birthdate').value = this.userManager.getBirthdate();
             
-            // Load stats if history exists
             if (this.csvManager.history.length > 0) {
                 this.patternAnalyzer.analyze();
                 this.ui.updateStats(this.patternAnalyzer.getInsights());
-                // Show stats tab but don't switch to it
-                const statsSection = document.getElementById('statsSection');
-                if (statsSection) {
-                    statsSection.classList.add('active');
-                }
+                // Auto-save to CSV on load if there's history
+                this.autoExportCSV();
             }
             
             this.ui.showToast(`👋 Welcome back, ${profile.name}!`, 'success');
         } else {
-            // New user - show registration
             this.ui.showUserRegistration();
         }
     }
 
     /**
      * Handle user registration
-     * @param {string} name - User's name
-     * @param {string} birthdate - Date of birth
      */
     handleUserRegistration(name, birthdate) {
         const zodiac = this.astrology.getZodiacSign(birthdate);
@@ -170,6 +152,7 @@ class NorseLotteryApp {
      */
     handleUserLogout() {
         this.csvManager.saveToStorage();
+        this.autoExportCSV(); // Auto-save on logout
         this.userManager.clearUser();
         
         const profile = document.querySelector('.user-profile-wrapper');
@@ -180,7 +163,6 @@ class NorseLotteryApp {
         
         this.ui.resetResults();
         
-        // Switch to input tab
         if (window.switchTab) {
             window.switchTab('input');
         }
@@ -230,7 +212,7 @@ class NorseLotteryApp {
     }
 
     /**
-     * Handle the main ritual
+     * Handle the main ritual - AUTO-SAVES to CSV
      */
     async handleRitual() {
         if (this.isRunning) return;
@@ -261,37 +243,47 @@ class NorseLotteryApp {
             this.patternAnalyzer.analyze();
             this.ui.updateStats(this.patternAnalyzer.getInsights());
             
-            if (result.duplicates && result.duplicates.length > 0) {
-                this.ui.showDuplicateWarning(result.duplicates);
+            // ==========================================
+            // CHECK FOR DUPLICATE SEQUENCE
+            // ==========================================
+            const isDuplicate = this.checkDuplicateSequence(result.numbers, result.extra);
+            
+            if (isDuplicate) {
+                this.ui.showToast('⚠️ DUPLICATE SEQUENCE DETECTED! These exact numbers appeared before!', 'warning');
+                // Show duplicate warning in results
+                this.ui.showDuplicateWarning([{
+                    date: 'Previous draw',
+                    matchingNumbers: result.numbers,
+                    count: result.numbers.length
+                }]);
             } else {
                 this.ui.hideDuplicateWarning();
+                this.ui.showToast(`✅ New sequence saved! Crown Jewel: ${result.extra}`, 'success');
             }
-
-            // Show results tab with Crown Jewel
+            
+            // ==========================================
+            // AUTO-SAVE TO CSV (numbers.csv)
+            // ==========================================
+            this.autoExportCSV();
+            
+            // Show results tab
             if (window.showResultsTab) {
                 window.showResultsTab();
             }
 
-            // Update stats in background
-            const statsSection = document.getElementById('statsSection');
-            if (statsSection) {
-                statsSection.classList.add('active');
-            }
-            
+            // Save to history in localStorage
             this.csvManager.saveSequence(result.numbers, result.extra, {
                 zodiac: result.zodiac,
                 prophecy: result.prophecy,
                 weather: result.weather || 'Unknown',
-                moonPhase: result.moonPhase || 'Unknown'
+                moonPhase: result.moonPhase || 'Unknown',
+                isDuplicate: isDuplicate
             });
 
             result.numbers.forEach(num => {
                 this.userManager.addLuckyNumber(num);
             });
             this.userManager.addLuckyNumber(result.extra);
-
-            // Show toast with Crown Jewel
-            this.ui.showToast(`👑 Crown Jewel: ${result.extra}!`, 'success');
 
         } catch (error) {
             console.error('Ritual failed:', error);
@@ -304,9 +296,62 @@ class NorseLotteryApp {
     }
 
     /**
+     * Check if a sequence already exists in history
+     * @param {Array} numbers - Main numbers
+     * @param {number} extra - Extra number
+     * @returns {boolean} True if duplicate
+     */
+    checkDuplicateSequence(numbers, extra) {
+        const history = this.csvManager.history;
+        const sortedNew = [...numbers].sort((a, b) => a - b);
+        
+        for (const entry of history) {
+            if (!entry.numbers) continue;
+            const existingNumbers = entry.numbers.split(',').map(Number).sort((a, b) => a - b);
+            const existingExtra = Number(entry.extra);
+            
+            // Check if all numbers match AND extra matches
+            const numbersMatch = sortedNew.every((num, i) => num === existingNumbers[i]);
+            const extraMatch = extra === existingExtra;
+            
+            if (numbersMatch && extraMatch) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Auto-export to CSV - saves numbers.csv automatically
+     */
+    autoExportCSV() {
+        const history = this.csvManager.history;
+        if (history.length === 0) return;
+        
+        const headers = ['numbers', 'extra', 'timestamp', 'zodiac', 'prophecy', 'weather', 'moonPhase'];
+        let csv = headers.join(',') + '\n';
+
+        history.forEach(entry => {
+            const row = headers.map(h => {
+                let value = entry[h] || '';
+                if (value.includes(',') || value.includes('"')) {
+                    value = `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            }).join(',');
+            csv += row + '\n';
+        });
+
+        // Store in localStorage as CSV string
+        localStorage.setItem('numbersCSV', csv);
+        localStorage.setItem('lastAutoSave', new Date().toISOString());
+        
+        // Update history table
+        this.ui.updateHistoryTable();
+    }
+
+    /**
      * Perform the cosmic ritual
-     * @param {string} birthdate - User's birthdate
-     * @returns {Object} Result data
      */
     async performRitual(birthdate) {
         const zodiac = this.astrology.getZodiacSign(birthdate);
@@ -376,9 +421,6 @@ class NorseLotteryApp {
 
     /**
      * Check for duplicate numbers in history
-     * @param {Array} mainNumbers - Main numbers
-     * @param {number} extra - Extra number
-     * @returns {Array} Duplicate entries
      */
     checkDuplicates(mainNumbers, extra) {
         const allHistory = this.csvManager.history;
@@ -402,9 +444,6 @@ class NorseLotteryApp {
 
     /**
      * Generate prophecy based on numbers
-     * @param {Array} numbers - Main numbers
-     * @param {Array} duplicates - Duplicate entries
-     * @returns {string} Prophecy text
      */
     generateProphecy(numbers, duplicates) {
         const evenCount = numbers.filter(n => n % 2 === 0).length;
@@ -440,7 +479,6 @@ class NorseLotteryApp {
 
     /**
      * Handle CSV upload
-     * @param {Event} event - File upload event
      */
     handleCSVUpload(event) {
         const file = event.target.files[0];
@@ -457,7 +495,6 @@ class NorseLotteryApp {
 
     /**
      * Handle CSV paste
-     * @param {string} text - CSV text
      */
     handleCSVPaste(text) {
         this.processCSVData(text);
@@ -466,7 +503,6 @@ class NorseLotteryApp {
 
     /**
      * Process CSV data
-     * @param {string} text - CSV text
      */
     processCSVData(text) {
         try {
@@ -475,8 +511,8 @@ class NorseLotteryApp {
             this.ui.showCSVPreview(data);
             this.ui.updateStats(this.patternAnalyzer.getInsights());
             this.ui.showToast(`✅ Loaded ${data.length} historical draws!`, 'success');
+            this.autoExportCSV(); // Auto-save after upload
             
-            // Switch to stats tab
             if (window.switchTab) {
                 window.switchTab('stats');
             }
@@ -487,35 +523,34 @@ class NorseLotteryApp {
     }
 
     /**
-     * Handle save action
+     * Handle save action - manual save to CSV
      */
     handleSave() {
         if (!this.currentResult) {
             this.ui.showToast('⚠️ No results to save!', 'error');
             return;
         }
-        this.ui.showToast('💾 Results saved to history!', 'success');
+        
+        // Force auto-export
+        this.autoExportCSV();
+        this.ui.showToast('💾 Results saved to history and CSV!', 'success');
     }
 
     /**
-     * Handle export action
+     * Handle export action - download CSV
      */
     handleExport() {
-        const csv = this.csvManager.exportCSV();
+        const csv = this.autoExportCSV();
         if (!csv) {
             this.ui.showToast('⚠️ No history to export!', 'error');
             return;
         }
 
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const link = document.getElementById('downloadLink');
-        link.href = url;
-        link.download = `norse-lottery-history-${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `numbers-${date}.csv`;
         
-        this.ui.showToast('📥 History exported successfully!', 'success');
+        // Download the CSV
+        this.ui.downloadCSV(csv, filename);
     }
 
     /**
@@ -525,7 +560,6 @@ class NorseLotteryApp {
         this.currentResult = null;
         this.ui.resetResults();
         
-        // Switch to input tab
         if (window.switchTab) {
             window.switchTab('input');
         }
