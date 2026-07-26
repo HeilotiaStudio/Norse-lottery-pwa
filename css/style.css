@@ -163,6 +163,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
@@ -286,6 +287,7 @@ body {
     border-radius: 16px;
     padding: var(--spacing-xl);
     border: var(--border-glow);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
@@ -1060,6 +1062,7 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.85);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     z-index: 1000;
     display: flex;
@@ -1277,4 +1280,31 @@ body {
 .reveal-sequence .number-circle.reveal {
     opacity: 1;
     transform: scale(1);
+}
+/* ========================================
+   RESULTS - EMPTY STATE
+   ======================================== */
+.results-empty {
+    text-align: center;
+    padding: var(--spacing-xxl) var(--spacing-xl);
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 2px dashed var(--bg-card);
+}
+
+.results-empty .empty-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.6;
+}
+
+.results-empty .empty-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.results-empty .action-button {
+    min-width: 180px;
 }
