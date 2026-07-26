@@ -5,7 +5,7 @@
 
 import { UserManager } from './userManager.js';
 import { CSVManager } from './csvManager.js';
-import { PatternAnalyzer } from './patternAnalyzer.js';
+import { PatternAnalyzer } './patternAnalyzer.js';
 import { QuantumModifier } from './quantumModifier.js';
 import { AstrologyEngine } from './astrology.js';
 import { TrialsEngine } from './trials.js';
@@ -47,6 +47,70 @@ class NorseLotteryApp {
         
         // Initialize app
         this.initialize();
+        
+        // Initialize tabs
+        this.initTabs();
+    }
+
+    /**
+     * Initialize tab navigation
+     */
+    initTabs() {
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const sections = {
+            input: document.getElementById('inputSection'),
+            stats: document.getElementById('statsSection'),
+            results: document.getElementById('resultsSection'),
+            profile: document.getElementById('profileSection')
+        };
+
+        // Hide results tab initially
+        const resultsBtn = document.querySelector('.nav-btn[data-tab="results"]');
+        if (resultsBtn) {
+            resultsBtn.style.display = 'none';
+        }
+
+        // Tab switching function
+        const switchTab = (tabId) => {
+            // Update buttons
+            navBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabId);
+            });
+
+            // Update sections
+            Object.keys(sections).forEach(key => {
+                if (sections[key]) {
+                    sections[key].classList.toggle('active', key === tabId);
+                }
+            });
+
+            // Save current tab
+            localStorage.setItem('currentTab', tabId);
+        };
+
+        // Add click listeners
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchTab(btn.dataset.tab);
+            });
+        });
+
+        // Restore last tab or default to input
+        const lastTab = localStorage.getItem('currentTab') || 'input';
+        switchTab(lastTab);
+
+        // Store switchTab globally so other methods can use it
+        window.switchTab = switchTab;
+        window.showResultsTab = () => {
+            const btn = document.querySelector('.nav-btn[data-tab="results"]');
+            if (btn) {
+                btn.style.display = 'flex';
+                switchTab('results');
+            }
+        };
+        
+        // Store sections globally for UI manager
+        window.tabSections = sections;
     }
 
     /**
@@ -69,7 +133,11 @@ class NorseLotteryApp {
             if (this.csvManager.history.length > 0) {
                 this.patternAnalyzer.analyze();
                 this.ui.updateStats(this.patternAnalyzer.getInsights());
-                this.ui.showStatsSection();
+                // Show stats tab but don't switch to it
+                const statsSection = document.getElementById('statsSection');
+                if (statsSection) {
+                    statsSection.classList.add('active');
+                }
             }
             
             this.ui.showToast(`👋 Welcome back, ${profile.name}!`, 'success');
@@ -111,7 +179,12 @@ class NorseLotteryApp {
         if (banner) banner.remove();
         
         this.ui.resetResults();
-        this.ui.showInputSection();
+        
+        // Switch to input tab
+        if (window.switchTab) {
+            window.switchTab('input');
+        }
+        
         document.getElementById('birthdate').value = '';
         
         this.ui.showUserRegistration();
@@ -194,7 +267,16 @@ class NorseLotteryApp {
                 this.ui.hideDuplicateWarning();
             }
 
-            this.ui.showStatsSection();
+            // Show results tab with Crown Jewel
+            if (window.showResultsTab) {
+                window.showResultsTab();
+            }
+
+            // Update stats in background
+            const statsSection = document.getElementById('statsSection');
+            if (statsSection) {
+                statsSection.classList.add('active');
+            }
             
             this.csvManager.saveSequence(result.numbers, result.extra, {
                 zodiac: result.zodiac,
@@ -207,6 +289,9 @@ class NorseLotteryApp {
                 this.userManager.addLuckyNumber(num);
             });
             this.userManager.addLuckyNumber(result.extra);
+
+            // Show toast with Crown Jewel
+            this.ui.showToast(`👑 Crown Jewel: ${result.extra}!`, 'success');
 
         } catch (error) {
             console.error('Ritual failed:', error);
@@ -390,7 +475,11 @@ class NorseLotteryApp {
             this.ui.showCSVPreview(data);
             this.ui.updateStats(this.patternAnalyzer.getInsights());
             this.ui.showToast(`✅ Loaded ${data.length} historical draws!`, 'success');
-            this.ui.showStatsSection();
+            
+            // Switch to stats tab
+            if (window.switchTab) {
+                window.switchTab('stats');
+            }
         } catch (error) {
             console.error('CSV parsing failed:', error);
             this.ui.showToast('❌ Invalid CSV format! Please check your data.', 'error');
@@ -435,7 +524,12 @@ class NorseLotteryApp {
     handleNewRitual() {
         this.currentResult = null;
         this.ui.resetResults();
-        this.ui.showInputSection();
+        
+        // Switch to input tab
+        if (window.switchTab) {
+            window.switchTab('input');
+        }
+        
         document.getElementById('birthdate').focus();
     }
 }
