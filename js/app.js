@@ -65,34 +65,46 @@ class NorseLotteryApp {
             profile: document.getElementById('profileSection')
         };
 
+        // Hide results tab initially
         const resultsBtn = document.querySelector('.nav-btn[data-tab="results"]');
         if (resultsBtn) {
             resultsBtn.style.display = 'none';
         }
 
+        // Tab switching function
         const switchTab = (tabId) => {
+            // Update nav buttons
             navBtns.forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tabId);
             });
 
+            // Update content sections
             Object.keys(sections).forEach(key => {
                 if (sections[key]) {
                     sections[key].classList.toggle('active', key === tabId);
                 }
             });
 
+            // Save current tab
             localStorage.setItem('currentTab', tabId);
         };
 
+        // Add click listeners to nav buttons
         navBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                switchTab(btn.dataset.tab);
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = btn.dataset.tab;
+                if (tabId) {
+                    switchTab(tabId);
+                }
             });
         });
 
+        // Restore last tab or default to input
         const lastTab = localStorage.getItem('currentTab') || 'input';
         switchTab(lastTab);
 
+        // Expose globally
         window.switchTab = switchTab;
         window.showResultsTab = () => {
             const btn = document.querySelector('.nav-btn[data-tab="results"]');
@@ -103,6 +115,8 @@ class NorseLotteryApp {
         };
         
         window.tabSections = sections;
+        
+        console.log('✅ Tabs initialized!');
     }
 
     /**
@@ -121,7 +135,6 @@ class NorseLotteryApp {
             if (this.csvManager.history.length > 0) {
                 this.patternAnalyzer.analyze();
                 this.ui.updateStats(this.patternAnalyzer.getInsights());
-                // Auto-save to CSV on load if there's history
                 this.autoExportCSV();
             }
             
@@ -152,7 +165,7 @@ class NorseLotteryApp {
      */
     handleUserLogout() {
         this.csvManager.saveToStorage();
-        this.autoExportCSV(); // Auto-save on logout
+        this.autoExportCSV();
         this.userManager.clearUser();
         
         const profile = document.querySelector('.user-profile-wrapper');
@@ -209,10 +222,18 @@ class NorseLotteryApp {
                 document.getElementById('ritualBtn').click();
             }
         });
+
+        // Profile register button
+        const profileRegisterBtn = document.getElementById('profileRegisterBtn');
+        if (profileRegisterBtn) {
+            profileRegisterBtn.addEventListener('click', () => {
+                this.ui.showUserRegistration();
+            });
+        }
     }
 
     /**
-     * Handle the main ritual - AUTO-SAVES to CSV
+     * Handle the main ritual
      */
     async handleRitual() {
         if (this.isRunning) return;
@@ -243,14 +264,11 @@ class NorseLotteryApp {
             this.patternAnalyzer.analyze();
             this.ui.updateStats(this.patternAnalyzer.getInsights());
             
-            // ==========================================
-            // CHECK FOR DUPLICATE SEQUENCE
-            // ==========================================
+            // Check for duplicate sequence
             const isDuplicate = this.checkDuplicateSequence(result.numbers, result.extra);
             
             if (isDuplicate) {
                 this.ui.showToast('⚠️ DUPLICATE SEQUENCE DETECTED! These exact numbers appeared before!', 'warning');
-                // Show duplicate warning in results
                 this.ui.showDuplicateWarning([{
                     date: 'Previous draw',
                     matchingNumbers: result.numbers,
@@ -261,9 +279,7 @@ class NorseLotteryApp {
                 this.ui.showToast(`✅ New sequence saved! Crown Jewel: ${result.extra}`, 'success');
             }
             
-            // ==========================================
-            // AUTO-SAVE TO CSV (numbers.csv)
-            // ==========================================
+            // Auto-save to CSV
             this.autoExportCSV();
             
             // Show results tab
@@ -271,7 +287,7 @@ class NorseLotteryApp {
                 window.showResultsTab();
             }
 
-            // Save to history in localStorage
+            // Save to history
             this.csvManager.saveSequence(result.numbers, result.extra, {
                 zodiac: result.zodiac,
                 prophecy: result.prophecy,
@@ -297,9 +313,6 @@ class NorseLotteryApp {
 
     /**
      * Check if a sequence already exists in history
-     * @param {Array} numbers - Main numbers
-     * @param {number} extra - Extra number
-     * @returns {boolean} True if duplicate
      */
     checkDuplicateSequence(numbers, extra) {
         const history = this.csvManager.history;
@@ -310,7 +323,6 @@ class NorseLotteryApp {
             const existingNumbers = entry.numbers.split(',').map(Number).sort((a, b) => a - b);
             const existingExtra = Number(entry.extra);
             
-            // Check if all numbers match AND extra matches
             const numbersMatch = sortedNew.every((num, i) => num === existingNumbers[i]);
             const extraMatch = extra === existingExtra;
             
@@ -322,7 +334,7 @@ class NorseLotteryApp {
     }
 
     /**
-     * Auto-export to CSV - saves numbers.csv automatically
+     * Auto-export to CSV - FIXED
      */
     autoExportCSV() {
         const history = this.csvManager.history;
@@ -333,7 +345,12 @@ class NorseLotteryApp {
 
         history.forEach(entry => {
             const row = headers.map(h => {
-                let value = entry[h] || '';
+                let value = entry[h];
+                if (value === undefined || value === null) {
+                    value = '';
+                } else {
+                    value = String(value);
+                }
                 if (value.includes(',') || value.includes('"')) {
                     value = `"${value.replace(/"/g, '""')}"`;
                 }
@@ -342,11 +359,8 @@ class NorseLotteryApp {
             csv += row + '\n';
         });
 
-        // Store in localStorage as CSV string
         localStorage.setItem('numbersCSV', csv);
         localStorage.setItem('lastAutoSave', new Date().toISOString());
-        
-        // Update history table
         this.ui.updateHistoryTable();
     }
 
@@ -511,7 +525,7 @@ class NorseLotteryApp {
             this.ui.showCSVPreview(data);
             this.ui.updateStats(this.patternAnalyzer.getInsights());
             this.ui.showToast(`✅ Loaded ${data.length} historical draws!`, 'success');
-            this.autoExportCSV(); // Auto-save after upload
+            this.autoExportCSV();
             
             if (window.switchTab) {
                 window.switchTab('stats');
@@ -523,7 +537,7 @@ class NorseLotteryApp {
     }
 
     /**
-     * Handle save action - manual save to CSV
+     * Handle save action
      */
     handleSave() {
         if (!this.currentResult) {
@@ -531,7 +545,6 @@ class NorseLotteryApp {
             return;
         }
         
-        // Force auto-export
         this.autoExportCSV();
         this.ui.showToast('💾 Results saved to history and CSV!', 'success');
     }
@@ -540,7 +553,7 @@ class NorseLotteryApp {
      * Handle export action - download CSV
      */
     handleExport() {
-        const csv = this.autoExportCSV();
+        const csv = localStorage.getItem('numbersCSV');
         if (!csv) {
             this.ui.showToast('⚠️ No history to export!', 'error');
             return;
@@ -549,7 +562,6 @@ class NorseLotteryApp {
         const date = new Date().toISOString().split('T')[0];
         const filename = `numbers-${date}.csv`;
         
-        // Download the CSV
         this.ui.downloadCSV(csv, filename);
     }
 
