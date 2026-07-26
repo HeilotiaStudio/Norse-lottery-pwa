@@ -260,10 +260,12 @@ export class UIManager {
         document.getElementById('resultsEmpty').style.display = 'none';
         document.getElementById('resultsContent').style.display = 'block';
 
-        this.showResultsSection();
-
         const circles = document.querySelectorAll('.number-circle');
         const colors = ['fire', 'ice', 'gold', 'green', 'purple'];
+        const bgColors = [
+            'var(--color-fire)', 'var(--color-ice)', 'var(--color-gold)',
+            'var(--color-green)', 'var(--color-purple)'
+        ];
 
         circles.forEach(circle => {
             const span = circle.querySelector('.number-value');
@@ -272,32 +274,21 @@ export class UIManager {
             circle.style.background = '';
         });
 
-        const bgColors = [
-            'var(--color-fire)', 'var(--color-ice)', 'var(--color-gold)',
-            'var(--color-green)', 'var(--color-purple)'
-        ];
-
         for (let i = 0; i < 5; i++) {
             await this.delay(600 + i * 300);
-
             const circle = circles[i];
             const flavor = document.getElementById(`flavor${i}`);
-
             const span = circle.querySelector('.number-value');
             if (span) span.textContent = result.numbers[i];
             circle.style.background = bgColors[i];
             circle.classList.add('reveal', `glow-${colors[i]}`);
-
-            if (flavor && result.flavors[i]) {
-                flavor.textContent = result.flavors[i];
-            }
+            if (flavor && result.flavors[i]) flavor.textContent = result.flavors[i];
         }
 
         await this.delay(500);
         const extraCircle = document.getElementById('extraCircle');
         const extraValue = document.getElementById('extraValue');
         const extraFlavor = document.getElementById('extraFlavor');
-
         if (extraValue) extraValue.textContent = result.extra;
         if (extraCircle) extraCircle.classList.add('reveal');
         if (extraFlavor && result.extraFlavor) extraFlavor.textContent = result.extraFlavor;

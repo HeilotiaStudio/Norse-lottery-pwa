@@ -250,13 +250,13 @@ class NorseLotteryApp {
      */
     async handleRitual() {
         if (this.isRunning) return;
-        
+
         if (!this.userManager.isRegistered()) {
             this.ui.showToast('⚠️ Please register first!', 'error');
             this.ui.showUserRegistration();
             return;
         }
-        
+
         const birthdate = this.userManager.getBirthdate() || document.getElementById('birthdate').value;
         if (!birthdate) {
             this.ui.showToast('⚠️ Please enter your date of birth!', 'error');
@@ -270,44 +270,10 @@ class NorseLotteryApp {
         try {
             const result = await this.performRitual(birthdate);
             this.currentResult = result;
-            
             this.userManager.incrementRituals();
-            await this.ui.displayResults(result);
-            
-            this.patternAnalyzer.analyze();
-            this.ui.updateStats(this.patternAnalyzer.getInsights());
-            
-            // Check for duplicate sequence
+
+            // Check duplicate before saving
             const isDuplicate = this.checkDuplicateSequence(result.numbers, result.extra);
-            
-            if (isDuplicate) {
-                this.ui.showToast('⚠️ DUPLICATE SEQUENCE DETECTED! These exact numbers appeared before!', 'warning');
-                this.ui.showDuplicateWarning([{
-                    date: 'Previous draw',
-                    matchingNumbers: result.numbers,
-                    count: result.numbers.length
-                }]);
-            } else {
-                this.ui.hideDuplicateWarning();
-                this.ui.showToast(`✅ New sequence saved! Crown Jewel: ${result.extra}`, 'success');
-            }
-            
-            // Auto-save to CSV and Google Sheets
-            this.autoExportCSV();
-            SheetsDB.save({
-                numbers: result.numbers.join(','),
-                extra: result.extra,
-                timestamp: result.timestamp,
-                zodiac: result.zodiac,
-                prophecy: result.prophecy,
-                weather: result.weather || 'Unknown',
-                moonPhase: result.moonPhase || 'Unknown'
-            });
-            
-            // Show results tab
-            if (window.showResultsTab) {
-                window.showResultsTab();
-            }
 
             // Save to history
             this.csvManager.saveSequence(result.numbers, result.extra, {
@@ -318,9 +284,38 @@ class NorseLotteryApp {
                 isDuplicate: isDuplicate
             });
 
-            result.numbers.forEach(num => {
-                this.userManager.addLuckyNumber(num);
+            // Switch to results tab first
+            if (window.showResultsTab) window.showResultsTab();
+
+            // Then run the reveal animation
+            await this.ui.displayResults(result);
+
+            // Update stats
+            this.patternAnalyzer.analyze();
+            this.ui.updateStats(this.patternAnalyzer.getInsights());
+
+            // Toast
+            if (isDuplicate) {
+                this.ui.showToast('⚠️ DUPLICATE SEQUENCE DETECTED!', 'warning');
+                this.ui.showDuplicateWarning([{ date: 'Previous draw', matchingNumbers: result.numbers, count: result.numbers.length }]);
+            } else {
+                this.ui.hideDuplicateWarning();
+                this.ui.showToast(`✅ New sequence saved! Crown Jewel: ${result.extra}`, 'success');
+            }
+
+            // Save to CSV and Google Sheets
+            this.autoExportCSV();
+            SheetsDB.save({
+                numbers: result.numbers.join(','),
+                extra: result.extra,
+                timestamp: result.timestamp,
+                zodiac: result.zodiac,
+                prophecy: result.prophecy,
+                weather: result.weather || 'Unknown',
+                moonPhase: result.moonPhase || 'Unknown'
             });
+
+            result.numbers.forEach(num => this.userManager.addLuckyNumber(num));
             this.userManager.addLuckyNumber(result.extra);
 
         } catch (error) {
