@@ -218,6 +218,10 @@ class NorseLotteryApp {
             this.handleNewRitual();
         });
 
+        document.getElementById('resultsRitualBtn').addEventListener('click', () => {
+            if (window.switchTab) window.switchTab('input');
+        });
+
         document.getElementById('birthdate').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 document.getElementById('ritualBtn').click();

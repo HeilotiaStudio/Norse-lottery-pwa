@@ -256,27 +256,38 @@ export class UIManager {
      * @param {Object} result - Result data
      */
     async displayResults(result) {
+        // Show results content, hide empty state
+        document.getElementById('resultsEmpty').style.display = 'none';
+        document.getElementById('resultsContent').style.display = 'block';
+
         this.showResultsSection();
 
         const circles = document.querySelectorAll('.number-circle');
-        const flavors = document.querySelectorAll('.number-flavor');
         const colors = ['fire', 'ice', 'gold', 'green', 'purple'];
 
         circles.forEach(circle => {
-            circle.textContent = '?';
+            const span = circle.querySelector('.number-value');
+            if (span) span.textContent = '?';
             circle.className = 'number-circle';
+            circle.style.background = '';
         });
+
+        const bgColors = [
+            'var(--color-fire)', 'var(--color-ice)', 'var(--color-gold)',
+            'var(--color-green)', 'var(--color-purple)'
+        ];
 
         for (let i = 0; i < 5; i++) {
             await this.delay(600 + i * 300);
-            
+
             const circle = circles[i];
-            const flavor = flavors[i];
-            
-            circle.textContent = result.numbers[i];
-            circle.classList.add('reveal');
-            circle.classList.add(`glow-${colors[i]}`);
-            
+            const flavor = document.getElementById(`flavor${i}`);
+
+            const span = circle.querySelector('.number-value');
+            if (span) span.textContent = result.numbers[i];
+            circle.style.background = bgColors[i];
+            circle.classList.add('reveal', `glow-${colors[i]}`);
+
             if (flavor && result.flavors[i]) {
                 flavor.textContent = result.flavors[i];
             }
@@ -286,21 +297,15 @@ export class UIManager {
         const extraCircle = document.getElementById('extraCircle');
         const extraValue = document.getElementById('extraValue');
         const extraFlavor = document.getElementById('extraFlavor');
-        
-        extraValue.textContent = result.extra;
-        extraCircle.classList.add('reveal');
-        if (extraFlavor && result.extraFlavor) {
-            extraFlavor.textContent = result.extraFlavor;
-        }
+
+        if (extraValue) extraValue.textContent = result.extra;
+        if (extraCircle) extraCircle.classList.add('reveal');
+        if (extraFlavor && result.extraFlavor) extraFlavor.textContent = result.extraFlavor;
 
         await this.delay(400);
         const prophecyText = document.getElementById('prophecyText');
-        if (prophecyText) {
-            prophecyText.textContent = result.prophecy;
-            prophecyText.parentElement.style.display = 'block';
-        }
+        if (prophecyText) prophecyText.textContent = result.prophecy;
 
-        // Update history table after results
         this.updateHistoryTable();
     }
 
@@ -308,20 +313,29 @@ export class UIManager {
      * Reset results section
      */
     resetResults() {
-        document.querySelectorAll('.number-circle').forEach(circle => {
-            circle.textContent = '?';
+        document.getElementById('resultsEmpty').style.display = 'block';
+        document.getElementById('resultsContent').style.display = 'none';
+
+        document.querySelectorAll('.number-circle').forEach((circle, i) => {
+            const span = circle.querySelector('.number-value');
+            if (span) span.textContent = '?';
             circle.className = 'number-circle';
         });
-        
+
         document.querySelectorAll('.number-flavor').forEach(flavor => {
             flavor.textContent = 'Summoning...';
         });
 
-        document.getElementById('extraValue').textContent = '?';
-        document.getElementById('extraCircle').className = 'extra-circle';
-        document.getElementById('extraFlavor').textContent = 'The Norns weave your fate...';
-        document.getElementById('prophecyText').textContent = 'The cosmos awaits...';
-        
+        const extraValue = document.getElementById('extraValue');
+        const extraCircle = document.getElementById('extraCircle');
+        const extraFlavor = document.getElementById('extraFlavor');
+        const prophecyText = document.getElementById('prophecyText');
+
+        if (extraValue) extraValue.textContent = '?';
+        if (extraCircle) extraCircle.className = 'extra-circle';
+        if (extraFlavor) extraFlavor.textContent = 'The Norns weave your fate...';
+        if (prophecyText) prophecyText.textContent = 'The cosmos awaits...';
+
         this.hideDuplicateWarning();
     }
 
