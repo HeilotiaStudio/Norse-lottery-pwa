@@ -43,14 +43,14 @@ class NorseLotteryApp {
             () => this.handleUserLogout()
         );
         
+        // Initialize tabs first so window.switchTab is available
+        this.initTabs();
+        
         // Bind UI events
         this.bindEvents();
         
         // Initialize app
         this.initialize();
-        
-        // Initialize tabs
-        this.initTabs();
     }
 
     /**
@@ -101,8 +101,9 @@ class NorseLotteryApp {
         });
 
         // Restore last tab or default to input
+        // Don't restore 'results' tab on fresh load — it requires a ritual to be run
         const lastTab = localStorage.getItem('currentTab') || 'input';
-        switchTab(lastTab);
+        switchTab(lastTab === 'results' ? 'input' : lastTab);
 
         // Expose globally
         window.switchTab = switchTab;
