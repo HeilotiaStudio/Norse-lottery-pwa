@@ -43,7 +43,7 @@
             </div>
         </header>
 
-        <!-- ============ NAVIGATION - FIXED SPACING ============ -->
+        <!-- ============ NAVIGATION ============ -->
         <nav class="main-nav" id="mainNav">
             <button class="nav-btn active" data-tab="input" id="navInput">
                 <span class="nav-icon">🌀</span>
@@ -195,65 +195,75 @@
                 <div class="results-container">
                     <h2>🌌 THE NUMBERS HAVE SPOKEN</h2>
                     
-                    <!-- The 5 Main Numbers -->
-                    <div class="numbers-grid" id="numbersGrid">
-                        <div class="number-slot" data-index="0">
-                            <div class="number-circle" style="background: var(--color-fire);">
-                                <span class="number-value">?</span>
-                            </div>
-                            <div class="number-flavor" id="flavor0">Summoning...</div>
-                        </div>
-                        <div class="number-slot" data-index="1">
-                            <div class="number-circle" style="background: var(--color-ice);">
-                                <span class="number-value">?</span>
-                            </div>
-                            <div class="number-flavor" id="flavor1">Summoning...</div>
-                        </div>
-                        <div class="number-slot" data-index="2">
-                            <div class="number-circle" style="background: var(--color-gold);">
-                                <span class="number-value">?</span>
-                            </div>
-                            <div class="number-flavor" id="flavor2">Summoning...</div>
-                        </div>
-                        <div class="number-slot" data-index="3">
-                            <div class="number-circle" style="background: var(--color-green);">
-                                <span class="number-value">?</span>
-                            </div>
-                            <div class="number-flavor" id="flavor3">Summoning...</div>
-                        </div>
-                        <div class="number-slot" data-index="4">
-                            <div class="number-circle" style="background: var(--color-purple);">
-                                <span class="number-value">?</span>
-                            </div>
-                            <div class="number-flavor" id="flavor4">Summoning...</div>
-                        </div>
+                    <!-- Empty State -->
+                    <div id="resultsEmpty" class="results-empty">
+                        <span class="empty-icon">🔮</span>
+                        <p class="empty-text">Perform a ritual to see your numbers!</p>
+                        <button id="resultsRitualBtn" class="action-button primary">🌀 Go to Ritual</button>
                     </div>
 
-                    <!-- ===== CROWN JEWEL (EXTRA NUMBER) ===== -->
-                    <div class="extra-number-container" id="extraContainer">
-                        <div class="extra-label">⭐ CROWN JEWEL ⭐</div>
-                        <div class="extra-circle" id="extraCircle">
-                            <span class="extra-value" id="extraValue">?</span>
+                    <!-- Results Content (hidden initially) -->
+                    <div id="resultsContent" style="display:none;">
+                        <!-- The 5 Main Numbers -->
+                        <div class="numbers-grid" id="numbersGrid">
+                            <div class="number-slot" data-index="0">
+                                <div class="number-circle" style="background: var(--color-fire);">
+                                    <span class="number-value">?</span>
+                                </div>
+                                <div class="number-flavor" id="flavor0">Summoning...</div>
+                            </div>
+                            <div class="number-slot" data-index="1">
+                                <div class="number-circle" style="background: var(--color-ice);">
+                                    <span class="number-value">?</span>
+                                </div>
+                                <div class="number-flavor" id="flavor1">Summoning...</div>
+                            </div>
+                            <div class="number-slot" data-index="2">
+                                <div class="number-circle" style="background: var(--color-gold);">
+                                    <span class="number-value">?</span>
+                                </div>
+                                <div class="number-flavor" id="flavor2">Summoning...</div>
+                            </div>
+                            <div class="number-slot" data-index="3">
+                                <div class="number-circle" style="background: var(--color-green);">
+                                    <span class="number-value">?</span>
+                                </div>
+                                <div class="number-flavor" id="flavor3">Summoning...</div>
+                            </div>
+                            <div class="number-slot" data-index="4">
+                                <div class="number-circle" style="background: var(--color-purple);">
+                                    <span class="number-value">?</span>
+                                </div>
+                                <div class="number-flavor" id="flavor4">Summoning...</div>
+                            </div>
                         </div>
-                        <div class="extra-flavor" id="extraFlavor">The Norns weave your fate...</div>
-                    </div>
 
-                    <!-- Prophecy -->
-                    <div class="prophecy-container" id="prophecyContainer">
-                        <div class="prophecy-icon">🔮</div>
-                        <div class="prophecy-text" id="prophecyText">The cosmos awaits...</div>
-                    </div>
+                        <!-- ===== CROWN JEWEL (EXTRA NUMBER) ===== -->
+                        <div class="extra-number-container" id="extraContainer">
+                            <div class="extra-label">⭐ CROWN JEWEL ⭐</div>
+                            <div class="extra-circle" id="extraCircle">
+                                <span class="extra-value" id="extraValue">?</span>
+                            </div>
+                            <div class="extra-flavor" id="extraFlavor">The Norns weave your fate...</div>
+                        </div>
 
-                    <!-- Duplicate Warning -->
-                    <div id="duplicateWarning" class="duplicate-warning" style="display:none;">
-                        ⚠️ These numbers have appeared before in your history!
-                    </div>
+                        <!-- Prophecy -->
+                        <div class="prophecy-container" id="prophecyContainer">
+                            <div class="prophecy-icon">🔮</div>
+                            <div class="prophecy-text" id="prophecyText">The cosmos awaits...</div>
+                        </div>
 
-                    <!-- Action Buttons -->
-                    <div class="result-actions">
-                        <button id="saveBtn" class="action-button secondary">💾 Save to History</button>
-                        <button id="exportBtn" class="action-button secondary">📥 Export CSV</button>
-                        <button id="newRitualBtn" class="action-button primary">🔄 New Ritual</button>
+                        <!-- Duplicate Warning -->
+                        <div id="duplicateWarning" class="duplicate-warning" style="display:none;">
+                            ⚠️ These numbers have appeared before in your history!
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="result-actions">
+                            <button id="saveBtn" class="action-button secondary">💾 Save to History</button>
+                            <button id="exportBtn" class="action-button secondary">📥 Export CSV</button>
+                            <button id="newRitualBtn" class="action-button primary">🔄 New Ritual</button>
+                        </div>
                     </div>
                 </div>
             </section>
