@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ Norse Cosmic Lottery ⚡</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="description" content="Summon your lottery numbers with Norse mythology, quantum physics, and cosmic alignments!">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Background cosmic particles -->
+    <div id="cosmicBg">
+        <div class="star" style="--size:1px; --x:10%; --y:20%; --duration:3s;"></div>
+        <div class="star" style="--size:2px; --x:25%; --y:15%; --duration:4.2s;"></div>
+        <div class="star" style="--size:1.5px; --x:40%; --y:60%; --duration:3.8s;"></div>
+        <div class="star" style="--size:1px; --x:55%; --y:30%; --duration:5.1s;"></div>
+        <div class="star" style="--size:2.5px; --x:70%; --y:80%; --duration:3.3s;"></div>
+        <div class="star" style="--size:1px; --x:85%; --y:45%; --duration:4.7s;"></div>
+        <div class="star" style="--size:2px; --x:5%; --y:75%; --duration:5.5s;"></div>
+        <div class="star" style="--size:1.5px; --x:92%; --y:10%; --duration:3.9s;"></div>
+        <div class="star" style="--size:1px; --x:48%; --y:92%; --duration:4.3s;"></div>
+        <div class="star" style="--size:2px; --x:15%; --y:50%; --duration:6.1s;"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">⚔️ NORSE COSMIC LOTTERY ⚔️</h1>
+                <p class="subtitle">Summon your fate from the nine realms</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="mainContent">
+            <!-- SECTION 1: INPUT -->
+            <section id="inputSection" class="section active">
+                <div class="input-container">
+                    <!-- Birthdate Input -->
+                    <div class="input-group">
+                        <label for="birthdate">📅 Date of Birth</label>
+                        <input type="date" id="birthdate" class="cosmic-input" required>
+                        <small class="hint">The stars need to know when you entered this realm</small>
+                    </div>
+
+                    <!-- CSV Upload -->
+                    <div class="input-group">
+                        <label for="csvUpload">📊 Past Numbers (CSV)</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="csvUpload" accept=".csv" class="file-input">
+                            <label for="csvUpload" class="file-label">Choose CSV File</label>
+                            <span id="fileName" class="file-name">No file selected</span>
+                        </div>
+                        <small class="hint">Upload your historical lottery data for pattern analysis</small>
+                    </div>
+
+                    <!-- Or paste CSV -->
+                    <div class="input-group">
+                        <label for="csvText">📝 Or Paste CSV Data</label>
+                        <textarea id="csvText" class="cosmic-textarea" placeholder="numbers,extra,date&#10;12,34,2026-01-01&#10;5,23,2026-01-02&#10;18,7,2026-01-03" rows="3"></textarea>
+                        <small class="hint">Format: numbers,extra,date (optional)</small>
+                    </div>
+
+                    <!-- Upload Preview -->
+                    <div id="uploadPreview" class="upload-preview" style="display:none;">
+                        <h4>📋 Uploaded Data Preview</h4>
+                        <div id="previewTable" class="preview-table"></div>
+                        <div class="stats-mini">
+                            <span id="previewCount">0</span> draws loaded
+                        </div>
+                    </div>
+
+                    <!-- Begin Button -->
+                    <button id="ritualBtn" class="ritual-button">
+                        <span class="btn-text">⚡ BEGIN THE RITUAL ⚡</span>
+                        <span class="btn-glow"></span>
+                    </button>
+
+                    <!-- Loading State -->
+                    <div id="loadingIndicator" class="loading-indicator" style="display:none;">
+                        <div class="loading-spinner"></div>
+                        <p>Summoning the cosmos...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: STATS DASHBOARD -->
+            <section id="statsSection" class="section">
+                <div class="stats-container">
+                    <h2>📊 Pattern Analysis</h2>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <span class="stat-icon">📈</span>
+                            <span class="stat-label">Total Draws</span>
+                            <span class="stat-value" id="totalDraws">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">🔢</span>
+                            <span class="stat-label">Unique Numbers</span>
+                            <span class="stat-value" id="uniqueNumbers">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">🎯</span>
+                            <span class="stat-label">Coverage</span>
+                            <span class="stat-value" id="coverage">0%</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">🔥</span>
+                            <span class="stat-label">Hot Numbers</span>
+                            <span class="stat-value" id="hotNumbers">-</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">❄️</span>
+                            <span class="stat-label">Cold Numbers</span>
+                            <span class="stat-value" id="coldNumbers">-</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-icon">🔗</span>
+                            <span class="stat-label">Frequent Pair</span>
+                            <span class="stat-value" id="frequentPair">-</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Frequency Chart -->
+                    <div class="frequency-chart-container">
+                        <h3>📊 Number Frequency</h3>
+                        <div id="frequencyChart" class="frequency-chart"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: RESULTS -->
+            <section id="resultsSection" class="section">
+                <div class="results-container">
+                    <h2>🌌 THE NUMBERS HAVE SPOKEN</h2>
+                    
+                    <!-- The 5 Main Numbers -->
+                    <div class="numbers-grid" id="numbersGrid">
+                        <div class="number-slot" data-index="0">
+                            <div class="number-circle" style="background: var(--color-fire);">
+                                <span class="number-value">?</span>
+                            </div>
+                            <div class="number-flavor" id="flavor0">Summoning...</div>
+                        </div>
+                        <div class="number-slot" data-index="1">
+                            <div class="number-circle" style="background: var(--color-ice);">
+                                <span class="number-value">?</span>
+                            </div>
+                            <div class="number-flavor" id="flavor1">Summoning...</div>
+                        </div>
+                        <div class="number-slot" data-index="2">
+                            <div class="number-circle" style="background: var(--color-gold);">
+                                <span class="number-value">?</span>
+                            </div>
+                            <div class="number-flavor" id="flavor2">Summoning...</div>
+                        </div>
+                        <div class="number-slot" data-index="3">
+                            <div class="number-circle" style="background: var(--color-green);">
+                                <span class="number-value">?</span>
+                            </div>
+                            <div class="number-flavor" id="flavor3">Summoning...</div>
+                        </div>
+                        <div class="number-slot" data-index="4">
+                            <div class="number-circle" style="background: var(--color-purple);">
+                                <span class="number-value">?</span>
+                            </div>
+                            <div class="number-flavor" id="flavor4">Summoning...</div>
+                        </div>
+                    </div>
+
+                    <!-- Extra Number -->
+                    <div class="extra-number-container">
+                        <div class="extra-label">⭐ CROWN JEWEL ⭐</div>
+                        <div class="extra-circle" id="extraCircle">
+                            <span class="extra-value" id="extraValue">?</span>
+                        </div>
+                        <div class="extra-flavor" id="extraFlavor">The Norns weave your fate...</div>
+                    </div>
+
+                    <!-- Prophecy -->
+                    <div class="prophecy-container" id="prophecyContainer">
+                        <div class="prophecy-icon">🔮</div>
+                        <div class="prophecy-text" id="prophecyText">The cosmos awaits...</div>
+                    </div>
+
+                    <!-- Duplicate Warning -->
+                    <div id="duplicateWarning" class="duplicate-warning" style="display:none;">
+                        ⚠️ These numbers have appeared before in your history!
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="result-actions">
+                        <button id="saveBtn" class="action-button secondary">💾 Save to History</button>
+                        <button id="exportBtn" class="action-button secondary">📥 Export CSV</button>
+                        <button id="newRitualBtn" class="action-button primary">🔄 New Ritual</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>⚡ Summoned with Norse magic &amp; quantum physics ⚡</p>
+            <p class="footer-small">Your fate is written in the stars... and in the code.</p>
+        </footer>
+    </div>
+
+    <!-- Hidden file input for CSV export -->
+    <a id="downloadLink" style="display:none;"></a>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
